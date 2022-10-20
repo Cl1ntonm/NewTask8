@@ -35,247 +35,201 @@ import java.util.ListIterator;
 import java.util.Scanner;
 
 
+
 /**
  * Main class that executes the menu options
  */
 public class PoisedPMS {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 
-        //Connection to the Database
-        try {
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/poisepms?useSSL=false",
-                    "otheruser",
-                    "swordfish"
-            );
+        DB context = new DB();
+        context.connect();
 
-            // Creating a direct line to the database
-            Statement statement = connection.createStatement();
-            ResultSet results = null;
+//        Project project = context.GetProject(1);
+//        String projectName = project.getProjectName();
+//        System.out.println(projectName);
+//
+//        Person person = context.GetPerson(1, 2);
+//        String personName = person.getLastName();
+//        System.out.println(personName);
 
-            // declare base variables
-            boolean closeProgram = false;
-            ArrayList<Project> projectArrayList = new ArrayList<>();
-            ListIterator listIterator = null;
-            ArrayList<Integer> projectNumberList = new ArrayList();
-
-            // while loop for menu
-            while (!closeProgram){
-                Scanner scanner = new Scanner(System.in).useDelimiter("\\n");
-
-                // calling method to display the options available for the user
-                PoisedUtilities.menuOption();
-                try {
-                    switch (scanner.nextInt()) {
-                        case 1:
-                            //Add New Project details
-
-                            break;
-
-                        case 2:
-                            //View Ongoing Projects - Full Details
-                            String sqlProject = "select*\n" +
-                                    "from projects\n" +
-                                    "where projects.project_number = 1;";
-
-                            String sqlCustomer = "select*\n" +
-                                    "from persons\n" +
-                                    "where persons.project_number = 1\n" +
-                                    "and role_id = 1;";
-
-                            String sqlArchitect = "select*\n" +
-                                    "from persons\n" +
-                                    "where persons.project_number = 1\n" +
-                                    "and role_id = 2;";
-
-                            String sqlContractor = "select*\n" +
-                                    "from persons\n" +
-                                    "where persons.project_number = 1\n" +
-                                    "and role_id = 3;";
-
-                            String sqlEngineer = "select*\n" +
-                                    "from persons\n" +
-                                    "where persons.project_number = 1\n" +
-                                    "and role_id = 4;";
-
-                            String sqlManager = "select*\n" +
-                                    "from persons\n" +
-                                    "where persons.project_number = 1\n" +
-                                    "and role_id = 5;";
-
-                            ResultSet resultSetProject = statement.executeQuery(sqlProject);
-                            ResultSet resultSetCustomer = statement.executeQuery(sqlCustomer);
-                            ResultSet resultSetArchitect = statement.executeQuery(sqlArchitect);
-                            ResultSet resultSetContractor = statement.executeQuery(sqlContractor);
-                            ResultSet resultSetEngineer = statement.executeQuery(sqlEngineer);
-                            ResultSet resultSetManager = statement.executeQuery(sqlManager);
+        //declare base variables
+        boolean closeProgram = false;
+        ArrayList<Project> projectArrayList = new ArrayList<Project>();
+        ArrayList<Project> ongoingProjects = new ArrayList<Project>();
+        ArrayList<Project> completedProjects = new ArrayList<Project>();
+        ArrayList<Project> lateProjects = new ArrayList<Project>();
+        //ListIterator listIterator = null;
 
 
-                            while (resultSetCustomer.next()) {
-                                // fields from Customer
-                                int personID = results.getInt("persons.id");
-                                int roleID = results.getInt("persons.project_number");
-                                String customerFirstName = results.getString("persons.first_name");
-                                String customerLastName = results.getString("persons.last_name");
-                                String customerTelephone = results.getString("persons.telephone");
-                                String customerEmail = results.getString("persons.email");
-                                String customerAddress = results.getString("persons.address");
+        //while loop for menu
+        while (!closeProgram){
+            Scanner scanner = new Scanner(System.in).useDelimiter("\\n");
+            // calling method to display the options available for the user
+            PoisedUtilities.menuOption();
+            try {
+                switch (scanner.nextInt()) {
+                    case 1:
+                        //Add New Project details
+                        System.out.println("Enter Project Name:");
+                        String projectName = scanner.nextLine();
+                        System.out.println("Enter Project Type:");
+                        String projectType = scanner.nextLine();
+                        System.out.println("Enter Project Address:");
+                        String projectAddress = scanner.nextLine();
+                        System.out.println("Enter Project ERF Number:");
+                        String projectErfNumber = scanner.nextLine();
+                        System.out.println("Enter Project Cost Amount:");
+                        String projectCostAmount = scanner.nextLine();
+                        System.out.println("Enter Project Paid Amount:");
+                        String projectPaidAmount = scanner.nextLine();
+                        System.out.println("Enter Project Deadline:");
+                        String projectDeadline = scanner.nextLine();
+                        System.out.println("Enter Project Completed Date:");
+                        String projectCompletedDate = scanner.nextLine();
+                        System.out.println("Is the Project Finalized y/n:");
+                        String projectFinalized = scanner.nextLine();
+                        if (projectFinalized == "y") {
+                            projectFinalized = "yes";
+                        } else if (projectFinalized == "n") {
+                            projectFinalized = "no";
+                        }
+                        Project project = new Project(0, projectName, projectType, projectAddress,
+                                projectErfNumber, Double.parseDouble(projectCostAmount), Double.parseDouble(projectPaidAmount),
+                                LocalDate.parse(projectDeadline), projectFinalized, LocalDate.parse(projectCompletedDate), null, null,
+                                null, null, null);
+                        int projectNumber = context.CreateProject(project);
 
-                                Person customer = new Person(personID, roleID, customerFirstName, customerLastName,
-                                        customerTelephone, customerEmail, customerAddress);
+                        ArrayList<Role> projectRoles = new ArrayList<Role>();
+                        projectRoles = context.GetAllRoles();
+                        for (Role role : projectRoles) {
+                            int roleID = role.getRoleID();
+                            System.out.println("Enter "+ role.getRoleName() +" first name:");
+                            String firstName = scanner.nextLine();
+                            System.out.println("Enter "+ role.getRoleName() +" last name:");
+                            String lastName = scanner.nextLine();
+                            System.out.println("Enter "+ role.getRoleName() +" telephone:");
+                            String telephone = scanner.nextLine();
+                            System.out.println("Enter "+ role.getRoleName() +" email:");
+                            String email = scanner.nextLine();
+                            System.out.println("Enter "+ role.getRoleName() +" email:");
+                            String address = scanner.nextLine();
+                            Person person = new Person(0, projectNumber, roleID, firstName, lastName, telephone, email, address);
+                            context.CreatePerson(person);
+                        }
+                        break;
+
+                    case 2:
+                        //View Ongoing Projects - Full Details
+                        ongoingProjects = context.GetOngoingProjects();
+                        System.out.println("ONGOING PROJECT DETAILS:");
+                        if (ongoingProjects.size() != 0){
+                            for (Project temp : ongoingProjects) {
+                                System.out.println(temp.displayDetails());
                             }
+                        } else {
+                            System.out.println("empty");
+                        }
+                        break;
 
-                            while (resultSetArchitect.next()) {
-                                // fields from Architect
-                                int personID = results.getInt("persons.id");
-                                int roleID = results.getInt("persons.project_number");
-                                String architectFirstName = results.getString("persons.first_name");
-                                String architectLastName = results.getString("persons.last_name");
-                                String architectTelephone = results.getString("persons.telephone");
-                                String architectEmail = results.getString("persons.email");
-                                String architectAddress = results.getString("persons.address");
-
-                                Person architect = new Person(personID, roleID, architectFirstName, architectLastName,
-                                        architectTelephone, architectEmail, architectAddress);
+                    case 3:
+                        //View Ongoing Projects - Name and Number
+                        ongoingProjects = context.GetOngoingProjects();
+                        System.out.println("ONGOING PROJECT SUMMARY:");
+                        if (ongoingProjects.size() != 0){
+                            for (Project temp : ongoingProjects) {
+                                System.out.println(temp.displaySummary());
                             }
+                        } else {
+                            System.out.println("empty");
+                        }
+                        break;
 
-                            while (resultSetContractor.next()) {
-                                // fields from Contractor
-                                int personID = results.getInt("persons.id");
-                                int roleID = results.getInt("persons.project_number");
-                                String contractorFirstName = results.getString("persons.first_name");
-                                String contractorLastName = results.getString("persons.last_name");
-                                String contractorTelephone = results.getString("persons.telephone");
-                                String contractorEmail = results.getString("persons.email");
-                                String contractorAddress = results.getString("persons.address");
-
-                                Person contractor = new Person(personID, roleID, contractorFirstName,
-                                        contractorLastName, contractorTelephone, contractorEmail, contractorAddress);
+                    case 4:
+                        //View Ongoing Projects Passed Due Date
+                        lateProjects = context.GetLateProjects();
+                        System.out.println("LATE PROJECT SUMMARY:");
+                        if (lateProjects.size() != 0){
+                            for (Project temp : lateProjects) {
+                                System.out.println(temp.displaySummary());
                             }
+                        } else {
+                            System.out.println("empty");
+                        }
+                        break;
 
-                            while (resultSetEngineer.next()) {
-                                // fields from Structural Engineer
-                                int personID = results.getInt("persons.id");
-                                int roleID = results.getInt("persons.project_number");
-                                String engineerFirstName = results.getString("persons.first_name");
-                                String engineerLastName = results.getString("persons.last_name");
-                                String engineerTelephone = results.getString("persons.telephone");
-                                String engineerEmail = results.getString("persons.email");
-                                String engineerAddress = results.getString("persons.address");
-
-                                Person engineer = new Person(personID, roleID, engineerFirstName,
-                                        engineerLastName, engineerTelephone, engineerEmail, engineerAddress);
+                    case 5:
+                        //Search for Ongoing Project
+                        ongoingProjects = context.GetOngoingProjects();
+                        System.out.println("ONGOING PROJECT SUMMARY:");
+                        if (ongoingProjects.size() != 0){
+                            for (Project temp : ongoingProjects) {
+                                System.out.println(temp.displaySummary());
                             }
+                        } else {
+                            System.out.println("empty");
+                        }
+                        System.out.println("\nEnter the Project ID to view details");
+                        int projectID = scanner.nextInt();
+                        Project searchProject = context.GetProject(projectID);
+                        System.out.println(searchProject.displayDetails());
+                        break;
 
-                            while (resultSetManager.next()) {
-                                // fields from Project Manager
-                                int personID = results.getInt("persons.id");
-                                int roleID = results.getInt("persons.project_number");
-                                String managerFirstName = results.getString("persons.first_name");
-                                String managerLastName = results.getString("persons.last_name");
-                                String managerTelephone = results.getString("persons.telephone");
-                                String managerEmail = results.getString("persons.email");
-                                String managerAddress = results.getString("persons.address");
+                    case 6:
+                        //Update Ongoing Project Details
 
-                                Person manager = new Person(personID, roleID, managerFirstName,
-                                        managerLastName, managerTelephone, managerEmail, managerAddress);
+                        break;
+                    case 7:
+                        //Delete a Project
+
+                        break;
+
+                    case 8:
+                        //Finalize - Display Invoice
+
+                        break;
+
+                    case 9:
+                        //View Completed Projects - Number & Names only
+                        completedProjects = context.GetCompletedProjects();
+                        System.out.println("COMPLETED PROJECT SUMMARY:");
+                        if (completedProjects.size() != 0){
+                            for (Project temp : completedProjects) {
+                                System.out.println(temp.displaySummary());
                             }
+                        } else {
+                            System.out.println("empty");
+                        }
+                        break;
 
-                            Project project = null;
-                            while (resultSetProject.next()) {
-                                // fields from Project table
-                                int projectNumber = results.getInt("project.project_number");
-                                String projectName = results.getString("project.name");
-                                String projectType = results.getString("project.type");
-                                String projectAddress = results.getString("project.address");
-                                String projectErf = results.getString("project.erf");
-                                float projectAmountCharged = results.getFloat("project.amount_charged");
-                                float projectAmountPaid = results.getFloat("project.amount_paid");
-                                //using pass-through function method for java and sql date incompatibility
-                                Date projectDeadlineDateSQL = results.getDate("project.deadline_date");
-                                LocalDate localDateDeadLineDate = projectDeadlineDateSQL.toLocalDate();
-                                //using pass-through function method for java and sql date incompatibility
-                                Date projectCompletedDateSQL = results.getDate("project.completed_date");
-                                LocalDate localDateCompletedDate = projectCompletedDateSQL.toLocalDate();
-                                String projectFinalised = results.getString("project.finalised");
-
-                                Person customer = null;
-                                Person architect = null;
-                                Person contractor = null;
-                                Person engineer = null;
-                                Person manager = null;
-
-                                project = new Project(projectNumber, projectName, projectType, projectAddress,
-                                        projectErf, projectAmountCharged, projectAmountPaid, localDateDeadLineDate,
-                                        projectFinalised, localDateCompletedDate, customer, architect, contractor,
-                                        engineer, manager);
+                    case 10:
+                        //View Completed Projects with details
+                        completedProjects = context.GetCompletedProjects();
+                        System.out.println("COMPLETED PROJECT DETAILS:");
+                        if (completedProjects.size() != 0){
+                            for (Project temp : completedProjects) {
+                                System.out.println(temp.displayDetails());
                             }
+                        } else {
+                            System.out.println("empty");
+                        }
+                        break;
 
-                            projectArrayList.add(project);
+                    case 0:
+                        //This option exits the program
+                        scanner.close();
+                        System.exit(0);
+                        System.out.println("Program is closed");
 
-                            listIterator = projectArrayList.listIterator();
-                            while (listIterator.hasNext())
-                                System.out.println(listIterator.next());
-
-                            break;
-
-                        case 3:
-                            //View Ongoing Projects - Name and Number
-
-                            break;
-
-                        case 4:
-                            //View Ongoing Projects Passed Due Date
-
-                            break;
-
-                        case 5:
-                            //Search for Ongoing Project
-
-                            break;
-
-                        case 6:
-                            //Update Ongoing Project Details
-
-                            break;
-                        case 7:
-                            //Delete a Project
-
-                            break;
-
-                        case 8:
-                            //Finalize - Display Invoice
-
-                            break;
-
-                        case 9:
-                            //View Completed Projects - Number & Names only
-
-                            break;
-
-                        case 10:
-                            //View Completed Projects with details
-
-                            break;
-
-                        case 0:
-                            //This option exits the program
-                            scanner.close();
-                            System.exit(0);
-                            System.out.println("Program is closed");
-
-                        default:
-                            // Should a user enter an incorrect option, the following message is displayed
-                            // allowing user to make a correct chose
-                            System.out.println("This is not a valid option \nPlease choose another ");
-                    }
-                }catch (InputMismatchException e){
-                    System.out.println("Invalid entry , Please try again ");
+                    default:
+                        // Should a user enter an incorrect option, the following message is displayed
+                        // allowing user to make a correct chose
+                        System.out.println("This is not a valid option \nPlease choose another ");
                 }
+            }catch (InputMismatchException e){
+                System.out.println("Invalid entry , Please try again ");
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 }
